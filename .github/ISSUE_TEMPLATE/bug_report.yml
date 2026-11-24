@@ -1,0 +1,49 @@
+name: Bug report
+description: cardndfixer does something wrong, or nothing when it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. You can export a sanitized diagnostic report
+        directly from **Diagnostics & Log Collector → Copy / Share** inside the
+        app (Bluetooth MAC addresses are automatically masked).
+  - type: input
+    id: version
+    attributes:
+      label: cardndfixer version and build type
+      placeholder: 0.1.0 (release) or 0.1.0-debug
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Phone model and Android version
+      placeholder: Pixel 9, Android 15
+    validations:
+      required: true
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Car connection type
+      options: [Wired Android Auto, Wireless Android Auto, Car Bluetooth only, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings used
+      description: Re-enable delay, Wait after disconnect, and Only re-enable if DND was ON
+      placeholder: "Re-enable delay: 1.5 s, Wait after disconnect: 3 s, Only if ON: true"
+  - type: textarea
+    id: log
+    attributes:
+      label: Diagnostic report or recent activity log
+      description: Paste output from Diagnostics & Log Collector → Copy
+      render: text

@@ -1,0 +1,3 @@
+<resources>
+    <!-- app_name is provided per buildType via resValue in app/build.gradle.kts -->
+</resources>

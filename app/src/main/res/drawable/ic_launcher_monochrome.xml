@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Cycle arcs -->
+    <path
+        android:pathData="M29.75,40 A28,28 0 0,1 78.25,40"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.2" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M79.8,43.2 L71.2,41.6 L78.8,33.2 Z" />
+
+    <path
+        android:pathData="M78.25,68 A28,28 0 0,1 29.75,68"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.2" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M28.2,64.8 L36.8,66.4 L29.2,74.8 Z" />
+
+    <!-- Car silhouette -->
+    <group
+        android:translateX="36"
+        android:translateY="36"
+        android:scaleX="1.5"
+        android:scaleY="1.5">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M6,19v1q0,0.43-0.29,0.71T5,21H4q-0.42,0-0.71-0.29Q3,20.43 3,20V12L5.1,6Q5.25,5.55 5.64,5.27T6.5,5h11q0.48,0 0.86,0.27T18.9,6L21,12v8q0,0.43-0.29,0.71T20,21H19q-0.43,0-0.71-0.29Q18,20.43 18,20V19H6ZM5.8,10H18.2L17.15,7H6.85L5.8,10ZM7.5,16q0.63,0 1.06-0.44T9,14.5T8.56,13.44T7.5,13T6.44,13.44T6,14.5t0.44,1.06T7.5,16Zm9,0q0.63,0 1.06-0.44T18,14.5t-0.44-1.06T16.5,13t-1.06,0.44T15,14.5t0.44,1.06T16.5,16Z" />
+    </group>
+</vector>

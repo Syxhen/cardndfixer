@@ -1,0 +1,6 @@
+# Keep LF line endings across platforms (especially gradlew and workflows)
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.webp binary
+*.jar binary
