@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-25
+
+### Fixed
+- Fixed an immediate crash on launch (`IllegalAccessError`) in the standard
+  release APK (`cardndfixer.apk`) caused by scoped R8 repackaging of Kotlin
+  standard library sequence classes.
+- Added an explicit R8 keep rule for persisted `EventType` activity log names.
+
+### Changed
+- Switched the release build to full R8 optimization, reducing the release APK
+  size from ~6 MB to ~2.5 MB.
+
 ## [0.1.0] - 2026-11-24
 
 First public version.
@@ -32,5 +44,6 @@ First public version.
   serialization, and MAC redaction.
 - GitHub Actions CI and tag-driven dual-APK release workflow.
 
-[Unreleased]: https://github.com/Syxhen/cardndfixer/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Syxhen/cardndfixer/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Syxhen/cardndfixer/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Syxhen/cardndfixer/releases/tag/v0.1.0
