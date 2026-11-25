@@ -32,7 +32,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG }}
 
@@ -45,13 +45,13 @@ jobs:
           fi
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Accept Android SDK licenses
         run: |
@@ -99,10 +99,39 @@ jobs:
 
       - name: Publish
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" cardndfixer.apk cardndfixer-debug.apk SHA256SUMS.txt --clobber
-          else
-            case $TAG in *-*) pre=--prerelease ;; *) pre=--latest ;; esac
-            gh release create "$TAG" cardndfixer.apk cardndfixer-debug.apk SHA256SUMS.txt --verify-tag "$pre" \
+          set -euo pipefail
+
+          retry() {
+            local attempt=1 max=4 delay=5
+            until "$@"; do
+              if [ "$attempt" -ge "$max" ]; then
+                echo "Command failed after $max attempts: $*" >&2
+                return 1
+              fi
+              echo "Attempt $attempt failed; retrying in ${delay}s..." >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$((delay * 2))
+            done
+          }
+
+          case $TAG in *-*) pre=--prerelease ;; *) pre=--latest ;; esac
+
+          is_draft=$(gh release view "$TAG" --json isDraft -q '.isDraft' 2>/dev/null || echo "missing")
+
+          # Create a draft release first when missing so partial uploads are never exposed.
+          if [ "$is_draft" = "missing" ]; then
+            retry gh release create "$TAG" --verify-tag --draft "$pre" \
+              --title "cardndfixer ${TAG#v}" --notes-file notes.md
+          fi
+
+          # Upload assets sequentially with retries to avoid uploads.github.com 5xx errors.
+          for asset in cardndfixer.apk cardndfixer-debug.apk SHA256SUMS.txt; do
+            retry gh release upload "$TAG" "$asset" --clobber
+          done
+
+          # Publish new or recovered draft releases without changing --latest on older published tags.
+          if [ "$is_draft" != "false" ]; then
+            retry gh release edit "$TAG" --draft=false "$pre" \
               --title "cardndfixer ${TAG#v}" --notes-file notes.md
           fi
