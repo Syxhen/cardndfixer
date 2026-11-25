@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Built-in GitHub **Updates** card with **Stable** and **Beta** release
+  channel selection, changelog preview, download progress indicator, SHA-256
+  checksum verification, and direct Android Package Installer launch.
+- Published `SHA256SUMS.txt` alongside release and debug APKs in GitHub
+  Releases.
+
+### Changed
+- Signed CI debug APKs (`cardndfixer-debug.apk`) with the repository release
+  keystore when configured so both standard and debug GitHub builds update
+  in-place seamlessly.
+
 ## [0.1.1] - 2026-11-25
 
 ### Fixed

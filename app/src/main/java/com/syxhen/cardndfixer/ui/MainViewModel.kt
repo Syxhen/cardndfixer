@@ -14,10 +14,16 @@ import com.syxhen.cardndfixer.CarDndApplication
 import com.syxhen.cardndfixer.data.AppSettings
 import com.syxhen.cardndfixer.data.EventLogEntry
 import com.syxhen.cardndfixer.data.EventType
+import com.syxhen.cardndfixer.data.UpdateChannel
 import com.syxhen.cardndfixer.diagnostics.DiagnosticLogSummary
 import com.syxhen.cardndfixer.dnd.CarRuntimeStatus
 import com.syxhen.cardndfixer.dnd.DndFilterLabels
 import com.syxhen.cardndfixer.service.AssociatedCarDevice
+import com.syxhen.cardndfixer.updater.AvailableUpdate
+import com.syxhen.cardndfixer.updater.UpdateCheckResult
+import com.syxhen.cardndfixer.updater.UpdateUiState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +46,7 @@ data class MainUiState(
     val eventLogs: List<EventLogEntry> = emptyList(),
     val systemState: SystemPermissionsState = SystemPermissionsState(),
     val diagnosticSummary: DiagnosticLogSummary = DiagnosticLogSummary(),
+    val updateState: UpdateUiState = UpdateUiState.Idle,
     val debugToolsEnabled: Boolean = BuildConfig.DEBUG_TOOLS_ENABLED,
     val appVersionLabel: String = BuildConfig.VERSION_NAME,
     val isPairingInProgress: Boolean = false,
@@ -61,18 +68,22 @@ class MainViewModel(
     private val companionManager = app.companionManager
     private val coordinator = app.dndCycleCoordinator
     private val diagnostics = app.diagnosticLogCollector
+    private val updater = app.appUpdater
 
     private val systemState = MutableStateFlow(readSystemState())
     private val pairingInProgress = MutableStateFlow(false)
     private val statusMessage = MutableStateFlow<String?>(null)
+    private val updateState = MutableStateFlow<UpdateUiState>(UpdateUiState.Idle)
+    private var updateJob: Job? = null
 
     private val transientUiState = combine(
         systemState,
         diagnostics.summary,
         pairingInProgress,
         statusMessage,
-    ) { sys, diagSummary, pairing, msg ->
-        TransientBundle(sys, diagSummary, pairing, msg)
+        updateState,
+    ) { sys, diagSummary, pairing, msg, update ->
+        TransientBundle(sys, diagSummary, pairing, msg, update)
     }
 
     val uiState: StateFlow<MainUiState> = combine(
@@ -87,6 +98,7 @@ class MainViewModel(
             eventLogs = logs,
             systemState = transient.systemState,
             diagnosticSummary = transient.diagnosticSummary,
+            updateState = transient.updateState,
             debugToolsEnabled = BuildConfig.DEBUG_TOOLS_ENABLED,
             appVersionLabel = BuildConfig.VERSION_NAME,
             isPairingInProgress = transient.isPairingInProgress,
@@ -132,6 +144,81 @@ class MainViewModel(
         diagnostics.setEnabled(enabled)
         viewModelScope.launch {
             preferences.setDiagnosticLoggingEnabled(enabled)
+        }
+    }
+
+    fun setUpdateChannel(channel: UpdateChannel) {
+        if (updateState.value !is UpdateUiState.Downloading) {
+            updateState.value = UpdateUiState.Idle
+        }
+        viewModelScope.launch {
+            preferences.setUpdateChannel(channel)
+        }
+    }
+
+    fun checkForUpdates() {
+        if (updateState.value is UpdateUiState.Checking || updateState.value is UpdateUiState.Downloading) {
+            return
+        }
+        val channel = uiState.value.settings.updateChannel
+        updateJob?.cancel()
+        updateJob = viewModelScope.launch {
+            updateState.value = UpdateUiState.Checking
+            when (val result = updater.checkForUpdate(channel = channel)) {
+                is UpdateCheckResult.UpdateAvailable -> {
+                    updateState.value = UpdateUiState.Available(result.update)
+                }
+                is UpdateCheckResult.UpToDate -> {
+                    updateState.value = UpdateUiState.UpToDate(
+                        checkedChannel = channel,
+                        latestTagName = result.latestTagName,
+                    )
+                }
+                is UpdateCheckResult.Error -> {
+                    updateState.value = UpdateUiState.Error(result.message)
+                }
+            }
+        }
+    }
+
+    fun downloadUpdate(update: AvailableUpdate) {
+        if (updateState.value is UpdateUiState.Downloading) return
+        updateJob?.cancel()
+        updateJob = viewModelScope.launch {
+            updateState.value = UpdateUiState.Downloading(
+                update = update,
+                downloadedBytes = 0L,
+                totalBytes = update.apkAsset.sizeBytes,
+            )
+            try {
+                val apkFile = updater.downloadUpdate(update) { downloaded, total ->
+                    updateState.value = UpdateUiState.Downloading(
+                        update = update,
+                        downloadedBytes = downloaded,
+                        totalBytes = total,
+                    )
+                }
+                updateState.value = UpdateUiState.ReadyToInstall(
+                    update = update,
+                    apkFile = apkFile,
+                    verifiedSha256 = update.apkAsset.sha256 != null,
+                )
+            } catch (_: CancellationException) {
+                updateState.value = UpdateUiState.Available(update)
+            } catch (error: Throwable) {
+                updateState.value = UpdateUiState.Error(
+                    error.message ?: "Could not download update APK.",
+                )
+            }
+        }
+    }
+
+    fun cancelUpdateDownload() {
+        val current = updateState.value
+        updateJob?.cancel()
+        updateJob = null
+        if (current is UpdateUiState.Downloading) {
+            updateState.value = UpdateUiState.Available(current.update)
         }
     }
 
@@ -298,5 +385,6 @@ class MainViewModel(
         val diagnosticSummary: DiagnosticLogSummary,
         val isPairingInProgress: Boolean,
         val statusMessage: String?,
+        val updateState: UpdateUiState,
     )
 }
