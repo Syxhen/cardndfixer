@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Material 3 bottom navigation bar with **Home** and **Settings** tabs,
+  preserving scroll position across tab switches.
+- Developer **About** card at the top of the **Settings** tab with a bundled
+  offline GitHub avatar, short bio, **GitHub Profile** link, pre-filled
+  **Report Bug** link (with app version, Android version, and device model),
+  and direct **Pull Requests** link.
+
+### Changed
+- Moved the in-app **Updates** card from the Home dashboard into the new
+  **Settings** tab.
+- Updated `.github/ISSUE_TEMPLATE/bug_report.yml` to support pre-filled version,
+  Android release, and device fields from the in-app **Report Bug** button.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added
