@@ -6,9 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
 ### Added
 - Material 3 bottom navigation bar with **Home** and **Settings** tabs,
-  preserving scroll position across tab switches.
+  supporting both tapping and horizontal swipe gestures while preserving scroll
+  position per tab.
 - Developer **About** card at the top of the **Settings** tab with a bundled
   offline GitHub avatar, short bio, **GitHub Profile** link, pre-filled
   **Report Bug** link (with app version, Android version, and device model),
@@ -72,7 +75,8 @@ First public version.
   serialization, and MAC redaction.
 - GitHub Actions CI and tag-driven dual-APK release workflow.
 
-[Unreleased]: https://github.com/Syxhen/cardndfixer/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Syxhen/cardndfixer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Syxhen/cardndfixer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Syxhen/cardndfixer/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Syxhen/cardndfixer/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Syxhen/cardndfixer/releases/tag/v0.1.0
