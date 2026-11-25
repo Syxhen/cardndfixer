@@ -3,8 +3,11 @@ package com.syxhen.cardndfixer.ui
 import android.app.NotificationManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,11 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -42,6 +42,7 @@ import com.syxhen.cardndfixer.ui.theme.CarDndTheme
 import com.syxhen.cardndfixer.updater.AvailableUpdate
 import com.syxhen.cardndfixer.updater.UpdateUiState
 import java.io.File
+import kotlinx.coroutines.launch
 
 private enum class MainTab(
     val label: String,
@@ -95,10 +96,12 @@ fun MainScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val tabs = MainTab.entries
-    var selectedTabIndex by rememberSaveable {
-        mutableIntStateOf(initialTabIndex.coerceIn(0, tabs.lastIndex))
-    }
-    val currentTab = tabs[selectedTabIndex]
+    val pagerState = rememberPagerState(
+        initialPage = initialTabIndex.coerceIn(0, tabs.lastIndex),
+        pageCount = { tabs.size },
+    )
+    val coroutineScope = rememberCoroutineScope()
+    val currentTab = tabs[pagerState.currentPage]
     val homeListState = rememberLazyListState()
     val settingsListState = rememberLazyListState()
 
@@ -138,10 +141,16 @@ fun MainScreen(
         bottomBar = {
             NavigationBar {
                 tabs.forEachIndexed { index, tab ->
-                    val selected = selectedTabIndex == index
+                    val selected = pagerState.currentPage == index
                     NavigationBarItem(
                         selected = selected,
-                        onClick = { selectedTabIndex = index },
+                        onClick = {
+                            if (pagerState.currentPage != index) {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }
+                        },
                         icon = {
                             Icon(
                                 painter = painterResource(
@@ -157,44 +166,50 @@ fun MainScreen(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
-        when (currentTab) {
-            MainTab.HOME -> {
-                HomeTab(
-                    uiState = uiState,
-                    listState = homeListState,
-                    modifier = Modifier.padding(innerPadding),
-                    onToggleAutomation = onToggleAutomation,
-                    onOpenDndSettings = onOpenDndSettings,
-                    onRequestBluetoothPermission = onRequestBluetoothPermission,
-                    onOpenBatterySettings = onOpenBatterySettings,
-                    onPairCarDevice = onPairCarDevice,
-                    onRemoveCarDevice = onRemoveCarDevice,
-                    onDisconnectDebounceChanged = onDisconnectDebounceChanged,
-                    onReEnableDelayMsChanged = onReEnableDelayMsChanged,
-                    onReEnableOnlyIfWasOnChanged = onReEnableOnlyIfWasOnChanged,
-                    onRunManualTest = onRunManualTest,
-                    onToggleDiagnosticLogging = onToggleDiagnosticLogging,
-                    onShareDiagnosticLog = onShareDiagnosticLog,
-                    onCopyDiagnosticLog = onCopyDiagnosticLog,
-                    onClearDiagnosticLog = onClearDiagnosticLog,
-                    onSimulateCarConnect = onSimulateCarConnect,
-                    onSimulateCarDisconnect = onSimulateCarDisconnect,
-                    onClearLogs = onClearLogs,
-                )
-            }
+        HorizontalPager(
+            state = pagerState,
+            beyondViewportPageCount = 1,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) { page ->
+            when (tabs[page]) {
+                MainTab.HOME -> {
+                    HomeTab(
+                        uiState = uiState,
+                        listState = homeListState,
+                        onToggleAutomation = onToggleAutomation,
+                        onOpenDndSettings = onOpenDndSettings,
+                        onRequestBluetoothPermission = onRequestBluetoothPermission,
+                        onOpenBatterySettings = onOpenBatterySettings,
+                        onPairCarDevice = onPairCarDevice,
+                        onRemoveCarDevice = onRemoveCarDevice,
+                        onDisconnectDebounceChanged = onDisconnectDebounceChanged,
+                        onReEnableDelayMsChanged = onReEnableDelayMsChanged,
+                        onReEnableOnlyIfWasOnChanged = onReEnableOnlyIfWasOnChanged,
+                        onRunManualTest = onRunManualTest,
+                        onToggleDiagnosticLogging = onToggleDiagnosticLogging,
+                        onShareDiagnosticLog = onShareDiagnosticLog,
+                        onCopyDiagnosticLog = onCopyDiagnosticLog,
+                        onClearDiagnosticLog = onClearDiagnosticLog,
+                        onSimulateCarConnect = onSimulateCarConnect,
+                        onSimulateCarDisconnect = onSimulateCarDisconnect,
+                        onClearLogs = onClearLogs,
+                    )
+                }
 
-            MainTab.SETTINGS -> {
-                SettingsTab(
-                    uiState = uiState,
-                    listState = settingsListState,
-                    modifier = Modifier.padding(innerPadding),
-                    onSelectUpdateChannel = onSelectUpdateChannel,
-                    onCheckForUpdates = onCheckForUpdates,
-                    onDownloadUpdate = onDownloadUpdate,
-                    onCancelUpdateDownload = onCancelUpdateDownload,
-                    onInstallUpdate = onInstallUpdate,
-                    onOpenUrl = onOpenUrl,
-                )
+                MainTab.SETTINGS -> {
+                    SettingsTab(
+                        uiState = uiState,
+                        listState = settingsListState,
+                        onSelectUpdateChannel = onSelectUpdateChannel,
+                        onCheckForUpdates = onCheckForUpdates,
+                        onDownloadUpdate = onDownloadUpdate,
+                        onCancelUpdateDownload = onCancelUpdateDownload,
+                        onInstallUpdate = onInstallUpdate,
+                        onOpenUrl = onOpenUrl,
+                    )
+                }
             }
         }
     }
@@ -230,7 +245,7 @@ private fun samplePreviewUiState(
     ),
     diagnosticSummary = DiagnosticLogSummary(lineCount = 12, sizeBytes = 1480L),
     debugToolsEnabled = false,
-    appVersionLabel = "0.3.0-beta.1",
+    appVersionLabel = "0.3.0",
     updateState = updateState,
     eventLogs = listOf(
         EventLogEntry(
