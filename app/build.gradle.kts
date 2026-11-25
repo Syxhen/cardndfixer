@@ -13,8 +13,8 @@ android {
         applicationId = "com.syxhen.cardndfixer"
         minSdk = 31
         targetSdk = 37
-        versionCode = 3
-        versionName = "0.2.0-beta.1"
+        versionCode = 4
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
