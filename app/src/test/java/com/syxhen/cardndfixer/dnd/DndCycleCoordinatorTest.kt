@@ -6,6 +6,7 @@ import com.syxhen.cardndfixer.data.AppSettings
 import com.syxhen.cardndfixer.data.EventLogEntry
 import com.syxhen.cardndfixer.data.EventType
 import com.syxhen.cardndfixer.data.SettingsStore
+import com.syxhen.cardndfixer.data.UpdateChannel
 import com.syxhen.cardndfixer.diagnostics.DiagnosticLogCollector
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -344,6 +345,10 @@ class DndCycleCoordinatorTest {
 
         override suspend fun setDiagnosticLoggingEnabled(enabled: Boolean) {
             settingsFlow.value = settingsFlow.value.copy(diagnosticLoggingEnabled = enabled)
+        }
+
+        override suspend fun setUpdateChannel(channel: UpdateChannel) {
+            settingsFlow.value = settingsFlow.value.copy(updateChannel = channel)
         }
 
         override suspend fun appendLog(entry: EventLogEntry) {

@@ -13,8 +13,8 @@ android {
         applicationId = "com.syxhen.cardndfixer"
         minSdk = 31
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.2.0-beta.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,6 +33,10 @@ android {
 
     buildTypes {
         debug {
+            // Use the persistent release keystore when supplied in CI so debug APKs
+            // from GitHub Releases also support seamless in-place updates; fall back
+            // to Android Studio's default debug keystore for local development.
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             resValue("string", "app_name", "Car DND Fixer (Debug)")

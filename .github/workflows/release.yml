@@ -86,6 +86,8 @@ jobs:
           ./gradlew :app:assembleRelease :app:assembleDebug --stacktrace
           cp app/build/outputs/apk/release/cardndfixer-release.apk cardndfixer.apk
           cp app/build/outputs/apk/debug/cardndfixer-debug.apk cardndfixer-debug.apk
+          sha256sum cardndfixer.apk cardndfixer-debug.apk > SHA256SUMS.txt
+          cat SHA256SUMS.txt
           rm -f release-keystore.jks
 
       - name: Extract the release notes from CHANGELOG.md
@@ -98,9 +100,9 @@ jobs:
       - name: Publish
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" cardndfixer.apk cardndfixer-debug.apk --clobber
+            gh release upload "$TAG" cardndfixer.apk cardndfixer-debug.apk SHA256SUMS.txt --clobber
           else
             case $TAG in *-*) pre=--prerelease ;; *) pre=--latest ;; esac
-            gh release create "$TAG" cardndfixer.apk cardndfixer-debug.apk --verify-tag "$pre" \
+            gh release create "$TAG" cardndfixer.apk cardndfixer-debug.apk SHA256SUMS.txt --verify-tag "$pre" \
               --title "cardndfixer ${TAG#v}" --notes-file notes.md
           fi

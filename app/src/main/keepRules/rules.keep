@@ -4,5 +4,6 @@
 # For more details, see
 #   https://d.android.com/r/tools/r8/keep-rules
 
-# EventType constant names are persisted in DataStore preferences for activity log entries.
+# Enum constant names persisted in DataStore preferences.
 -keep enum com.syxhen.cardndfixer.data.EventType { *; }
+-keep enum com.syxhen.cardndfixer.data.UpdateChannel { *; }

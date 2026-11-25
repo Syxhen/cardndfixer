@@ -6,6 +6,7 @@ import com.syxhen.cardndfixer.diagnostics.DiagnosticLogCollector
 import com.syxhen.cardndfixer.dnd.AndroidDndGateway
 import com.syxhen.cardndfixer.dnd.DndCycleCoordinator
 import com.syxhen.cardndfixer.service.CarCompanionManager
+import com.syxhen.cardndfixer.updater.AppUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +33,9 @@ class CarDndApplication : Application() {
     lateinit var dndCycleCoordinator: DndCycleCoordinator
         private set
 
+    lateinit var appUpdater: AppUpdater
+        private set
+
     override fun onCreate() {
         super.onCreate()
         preferencesRepository = AppPreferencesRepository(applicationContext)
@@ -44,6 +48,7 @@ class CarDndApplication : Application() {
             scope = applicationScope,
             diagnostics = diagnosticLogCollector,
         )
+        appUpdater = AppUpdater(applicationContext, diagnosticLogCollector)
 
         applicationScope.launch {
             preferencesRepository.settings

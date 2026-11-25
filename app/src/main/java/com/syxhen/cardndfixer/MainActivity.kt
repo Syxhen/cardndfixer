@@ -9,6 +9,7 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -27,10 +28,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syxhen.cardndfixer.ui.MainScreen
 import com.syxhen.cardndfixer.ui.MainViewModel
 import com.syxhen.cardndfixer.ui.theme.CarDndTheme
+import java.io.File
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+    private var pendingInstallApk: File? = null
 
     private val bluetoothPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -38,6 +41,20 @@ class MainActivity : ComponentActivity() {
         viewModel.refreshSystemState()
         if (!granted) {
             viewModel.onPairingError("Bluetooth permission is needed to associate your car.")
+        }
+    }
+
+    private val installPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        val pending = pendingInstallApk
+        pendingInstallApk = null
+        if (pending != null && packageManager.canRequestPackageInstalls()) {
+            launchPackageInstaller(pending)
+        } else if (pending != null) {
+            viewModel.showStatusMessage(
+                "Allow \"Install unknown apps\" for Car DND Fixer to install updates in-app.",
+            )
         }
     }
 
@@ -113,10 +130,70 @@ class MainActivity : ComponentActivity() {
                     onClearDiagnosticLog = viewModel::clearDiagnosticLogs,
                     onSimulateCarConnect = viewModel::simulateCarConnect,
                     onSimulateCarDisconnect = viewModel::simulateCarDisconnect,
+                    onSelectUpdateChannel = viewModel::setUpdateChannel,
+                    onCheckForUpdates = viewModel::checkForUpdates,
+                    onDownloadUpdate = viewModel::downloadUpdate,
+                    onCancelUpdateDownload = viewModel::cancelUpdateDownload,
+                    onInstallUpdate = ::installDownloadedApk,
+                    onOpenReleaseUrl = ::openUrlInBrowser,
                     onClearLogs = viewModel::clearLogs,
                     onConsumeStatusMessage = viewModel::consumeStatusMessage,
                 )
             }
+        }
+    }
+
+    private fun installDownloadedApk(apkFile: File) {
+        if (!apkFile.exists()) {
+            viewModel.showStatusMessage("Update APK file was cleared from cache. Please download again.")
+            return
+        }
+        if (!packageManager.canRequestPackageInstalls()) {
+            pendingInstallApk = apkFile
+            val intent = Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:$packageName"),
+            )
+            runCatching {
+                installPermissionLauncher.launch(intent)
+            }.onFailure { error ->
+                pendingInstallApk = null
+                viewModel.showStatusMessage(
+                    "Could not open install permission settings: ${error.localizedMessage ?: "unknown error"}",
+                )
+            }
+            return
+        }
+        launchPackageInstaller(apkFile)
+    }
+
+    private fun launchPackageInstaller(apkFile: File) {
+        runCatching {
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${BuildConfig.APPLICATION_ID}.fileprovider",
+                apkFile,
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        }.onFailure { error ->
+            viewModel.showStatusMessage(
+                "Could not launch package installer: ${error.localizedMessage ?: "unknown error"}",
+            )
+        }
+    }
+
+    private fun openUrlInBrowser(url: String) {
+        runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }.onFailure { error ->
+            viewModel.showStatusMessage(
+                "Could not open link: ${error.localizedMessage ?: "unknown error"}",
+            )
         }
     }
 

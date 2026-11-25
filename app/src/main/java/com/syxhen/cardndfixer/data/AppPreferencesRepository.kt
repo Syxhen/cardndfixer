@@ -26,6 +26,7 @@ interface SettingsStore {
     suspend fun setReEnableDelayMs(delayMs: Long)
     suspend fun setReEnableOnlyIfWasOn(onlyIfWasOn: Boolean)
     suspend fun setDiagnosticLoggingEnabled(enabled: Boolean)
+    suspend fun setUpdateChannel(channel: UpdateChannel)
     suspend fun appendLog(entry: EventLogEntry)
     suspend fun clearLogs()
 }
@@ -52,6 +53,9 @@ class AppPreferencesRepository(
             reEnableOnlyIfWasOn = prefs[KEY_RE_ENABLE_ONLY_IF_WAS_ON] ?: true,
             diagnosticLoggingEnabled = prefs[KEY_DIAGNOSTIC_LOGGING_ENABLED]
                 ?: BuildConfig.DEBUG_TOOLS_ENABLED,
+            updateChannel = prefs[KEY_UPDATE_CHANNEL]
+                ?.let { raw -> runCatching { UpdateChannel.valueOf(raw) }.getOrNull() }
+                ?: UpdateChannel.STABLE,
         )
     }
 
@@ -97,6 +101,12 @@ class AppPreferencesRepository(
         }
     }
 
+    override suspend fun setUpdateChannel(channel: UpdateChannel) {
+        context.carDndDataStore.edit { prefs ->
+            prefs[KEY_UPDATE_CHANNEL] = channel.name
+        }
+    }
+
     override suspend fun appendLog(entry: EventLogEntry) {
         context.carDndDataStore.edit { prefs ->
             val current = decodeLogs(prefs[KEY_EVENT_LOGS].orEmpty())
@@ -121,6 +131,7 @@ class AppPreferencesRepository(
         private val KEY_RE_ENABLE_DELAY_MS = longPreferencesKey("re_enable_delay_ms")
         private val KEY_RE_ENABLE_ONLY_IF_WAS_ON = booleanPreferencesKey("re_enable_only_if_was_on")
         private val KEY_DIAGNOSTIC_LOGGING_ENABLED = booleanPreferencesKey("diagnostic_logging_enabled")
+        private val KEY_UPDATE_CHANNEL = stringPreferencesKey("update_channel")
         private val KEY_EVENT_LOGS = stringPreferencesKey("event_logs")
 
         internal fun encodeLogs(entries: List<EventLogEntry>): String =

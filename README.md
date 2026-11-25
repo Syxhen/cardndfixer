@@ -74,6 +74,10 @@ itself wake the app when your car disconnects.
   wired/wireless Android Auto).
 - **Do Not Disturb access** (`ACCESS_NOTIFICATION_POLICY`) and **Bluetooth**
   (`BLUETOOTH_CONNECT`) permissions.
+- Optional **Internet** (`INTERNET`) and **Install unknown apps**
+  (`REQUEST_INSTALL_PACKAGES`) permissions used strictly when you manually tap
+  **Check for updates** / **Download APK** inside the in-app updater (no
+  background telemetry or analytics).
 - No root required.
 
 ## Install
@@ -107,6 +111,17 @@ adb install -r cardndfixer.apk
 Test versions are published as **pre-releases** (tags like `v0.2.0-beta.1`)
 and are not picked up by the `releases/latest` link.
 
+### In-app updates (Stable & Beta)
+
+Open the **Updates** card in the app to choose between:
+- **Stable** — checks official stable GitHub releases (`releases/latest`).
+- **Beta** — includes GitHub pre-releases (such as `v0.2.0-beta.1`) as well as
+  newer stable releases.
+
+Tap **Check for updates** to query GitHub manually, download the matching APK
+with SHA-256 verification, and install it directly in-place without losing your
+settings or paired car devices.
+
 ## First-time setup
 
 Open **Car DND Fixer** and complete the checklist on the home screen:
@@ -133,6 +148,7 @@ immediately:
 | Wait after disconnect | `3 s` | Debounce window after Bluetooth disconnect before cycling (`0 s`–`15 s`) |
 | Only re-enable if DND was ON | `ON` | Leaves DND off if it was not active at disconnect; disable to always re-enable Priority DND |
 | Collect diagnostic logs | `OFF` (Release) / `ON` (Debug) | Records service lifecycle and DND filter transitions locally |
+| Update channel | `Stable` | Chooses between official Stable GitHub releases or Beta pre-releases for in-app updates |
 
 ## Diagnostics & troubleshooting
 

@@ -2,12 +2,18 @@ package com.syxhen.cardndfixer.data
 
 import com.syxhen.cardndfixer.BuildConfig
 
+enum class UpdateChannel {
+    STABLE,
+    BETA,
+}
+
 data class AppSettings(
     val automationEnabled: Boolean = true,
     val disconnectDebounceSeconds: Int = DEFAULT_DISCONNECT_DEBOUNCE_SECONDS,
     val reEnableDelayMs: Long = DEFAULT_RE_ENABLE_DELAY_MS,
     val reEnableOnlyIfWasOn: Boolean = true,
     val diagnosticLoggingEnabled: Boolean = BuildConfig.DEBUG_TOOLS_ENABLED,
+    val updateChannel: UpdateChannel = UpdateChannel.STABLE,
 ) {
     companion object {
         const val DEFAULT_DISCONNECT_DEBOUNCE_SECONDS = 3
