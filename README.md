@@ -113,9 +113,11 @@ and are not picked up by the `releases/latest` link.
 
 ### In-app updates (Stable & Beta)
 
-Open the **Updates** card in the app to choose between:
+Open the **Settings** tab in the bottom navigation bar to access the
+**Updates** card (alongside developer links, pre-filled bug reporting, and
+pull requests) and choose between:
 - **Stable** — checks official stable GitHub releases (`releases/latest`).
-- **Beta** — includes GitHub pre-releases (such as `v0.2.0-beta.1`) as well as
+- **Beta** — includes GitHub pre-releases (such as `v0.3.0-beta.1`) as well as
   newer stable releases.
 
 Tap **Check for updates** to query GitHub manually, download the matching APK

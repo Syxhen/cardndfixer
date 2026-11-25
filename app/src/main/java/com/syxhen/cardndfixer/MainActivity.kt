@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
                     onDownloadUpdate = viewModel::downloadUpdate,
                     onCancelUpdateDownload = viewModel::cancelUpdateDownload,
                     onInstallUpdate = ::installDownloadedApk,
-                    onOpenReleaseUrl = ::openUrlInBrowser,
+                    onOpenUrl = ::openUrlInBrowser,
                     onClearLogs = viewModel::clearLogs,
                     onConsumeStatusMessage = viewModel::consumeStatusMessage,
                 )
